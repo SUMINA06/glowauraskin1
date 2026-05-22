@@ -1,0 +1,116 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f3f3f3;
+}
+
+.container {
+  display: flex;
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+}
+
+.box {
+  background: #fff;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.box h3 {
+  margin-bottom: 10px;
+}
+
+.box label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Content */
+.content {
+  flex: 1;
+  margin-left: 20px;
+}
+
+.page-header h2 {
+  margin: 0;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.toolbar select {
+  padding: 6px;
+}
+
+.view-btns button {
+  padding: 6px 10px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+/* Grid View */
+.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.product {
+  background: #fff;
+  padding: 10px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.product img {
+  width: 100%;
+}
+
+.product h4 {
+  font-size: 14px;
+}
+
+.product span {
+  color: #8b0000;
+  font-weight: bold;
+}
+
+/* List View */
+.list-view {
+  display: block;
+}
+
+.list-view .product {
+  display: flex;
+  text-align: left;
+  gap: 20px;
+}
+
+.list-view img {
+  width: 200px;
+}
+
+/* Pagination */
+.pagination {
+  margin-top: 30px;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  margin-right: 5px;
+}
+
+.pagination .active {
+  background: #8b0000;
+  color: white;
+}

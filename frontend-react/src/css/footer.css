@@ -1,0 +1,110 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Add this if not already defined */
+:root {
+  --bg: #121212; /* dark contrast background */
+}
+
+.footer {
+  background-color: var(--bg);
+  padding: 40px 20px;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+}
+
+.footer-box h4 {
+  color: #ff6f91; /* pink accent */
+  margin-bottom: 15px;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.footer-box p,
+.footer-box li {
+  font-size: 13px;
+  color: #d1d1d1; /* light text for contrast */
+}
+
+.footer-box ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-box ul li {
+  margin-bottom: 8px;
+}
+
+.footer-box ul li a {
+  text-decoration: none;
+  color: #d1d1d1;
+  transition: 0.3s;
+}
+
+.footer-box ul li a:hover {
+  color: #ff6f91;
+}
+
+.highlight {
+  color: #ff9bb3;
+}
+
+.newsletter {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.newsletter input {
+  padding: 8px;
+  width: 70%;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background-color: #1f1f1f;
+  color: #fff;
+}
+
+.newsletter input::placeholder {
+  color: #aaa;
+}
+
+.newsletter button {
+  padding: 8px 15px;
+  background-color: #ff6f91;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.newsletter button:hover {
+  background-color: #ff4f7a;
+}
+
+.payment-icons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.payment-icons img {
+  height: 40px;
+  object-fit: contain;
+  filter: brightness(0.9); /* optional: match dark theme */
+}
+
+.secure-lock {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #aaa;
+}
