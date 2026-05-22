@@ -45,8 +45,12 @@ const Register = () => {
         throw new Error("No userId returned from server");
       }
 
-      const userRes = await apiClient.getUserById(userId);
-      const user = userRes.data || userRes;
+      const loginResponse = await apiClient.loginUser({
+        email: form.email,
+        password: form.password,
+      });
+      const apiPayload = loginResponse.data || loginResponse;
+      const user = apiPayload?.data ?? apiPayload;
 
       // Clear admin session if somehow exists
       localStorage.removeItem("adminUser");

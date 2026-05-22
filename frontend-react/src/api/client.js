@@ -1,6 +1,10 @@
 import axios from "axios";
 
-const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+let RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+if (!RAW_API_BASE_URL && import.meta.env.DEV) {
+  RAW_API_BASE_URL = "http://localhost:3000";
+}
 
 if (!RAW_API_BASE_URL) {
   throw new Error("VITE_API_BASE_URL is required");

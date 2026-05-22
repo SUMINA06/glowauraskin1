@@ -3,9 +3,10 @@ const dotenv = require("dotenv");
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
-const required = ["DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME", "JWT_SECRET"];
+const required = ["DB_HOST", "DB_USER", "DB_NAME", "JWT_SECRET"];
 
 if (process.env.NODE_ENV === "production") {
+  required.push("DB_PASSWORD");
   required.push(
     "FRONTEND_URL",
     "CLOUDINARY_CLOUD_NAME",
