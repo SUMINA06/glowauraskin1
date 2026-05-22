@@ -3,6 +3,7 @@ const { Order } = require("../model/Order");
 const { Payment } = require("../model/Payment");
 const { Product } = require("../model/Product");
 const { Cart } = require("../model/Cart");
+const storage = require("../services/storage");
 
 const validOrderStatuses = [
   "pending",
@@ -249,7 +250,7 @@ const createOrder = async (req, res) => {
     shipping_address,
   });
   console.log("[createOrder] raw cart:", cart);
-  console.log("[createOrder] file:", req.file ? { fieldname: req.file.fieldname, originalname: req.file.originalname, mimetype: req.file.mimetype, filename: req.file.filename, path: req.file.path } : null);
+  console.log("[createOrder] file:", req.file ? { fieldname: req.file.fieldname, originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size } : null);
 
   try {
     cart = parseCartPayload(cart);
@@ -279,9 +280,16 @@ const createOrder = async (req, res) => {
       });
     }
 
-    const paymentScreenshot = req.file
-      ? `/uploads/payments/${req.file.filename}`
-      : null;
+    let paymentScreenshot = null;
+
+    if (req.file) {
+      const uploadedScreenshot = await storage.uploadImage({
+        buffer: req.file.buffer,
+        filename: req.file.originalname,
+        folder: "payments",
+      });
+      paymentScreenshot = uploadedScreenshot.url;
+    }
 
     if (!paymentScreenshot) {
       return res.status(400).json({

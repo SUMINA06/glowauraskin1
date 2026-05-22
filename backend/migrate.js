@@ -13,6 +13,7 @@ async function migrateDatabase() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         product_id INT NOT NULL,
         image_path VARCHAR(255) NOT NULL,
+        image_public_id VARCHAR(255),
         image_name VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
@@ -22,6 +23,22 @@ async function migrateDatabase() {
 
     await db.query(imageTableQuery);
     console.log("Images table recreated with correct schema");
+
+    const [imageColumnsResult] = await db.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'images'
+        AND COLUMN_NAME IN ('image_public_id')
+    `);
+
+    const imageColumns = Array.isArray(imageColumnsResult) ? imageColumnsResult : [];
+    const hasImagePublicId = imageColumns.some((column) => column.COLUMN_NAME === 'image_public_id');
+
+    if (!hasImagePublicId) {
+      await db.query("ALTER TABLE images ADD COLUMN image_public_id VARCHAR(255)");
+      console.log("Added image_public_id column to images table");
+    }
 
     const cartTableQuery = `
       CREATE TABLE IF NOT EXISTS cart_items (

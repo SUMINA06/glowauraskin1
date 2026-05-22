@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS images (
   id INT AUTO_INCREMENT PRIMARY KEY,
   product_id INT NOT NULL,
   image_path VARCHAR(255) NOT NULL,
+  image_public_id VARCHAR(255),
   image_name VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,

@@ -91,7 +91,7 @@ const Products = ({
               ...product,
               image:
                 images.length > 0
-                  ? `${apiClient.API_ROOT}${images[0].image_path}`
+                  ? apiClient.resolveImageUrl(images[0].image_path)
                   : "https://via.placeholder.com/300x300",
             };
           } catch {

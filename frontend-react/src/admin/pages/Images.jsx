@@ -78,7 +78,7 @@ const AdminImages = () => {
                 <img
                   src={
                     img.image_path
-                      ? `${apiClient.API_ROOT}${img.image_path}`
+                      ? apiClient.resolveImageUrl(img.image_path)
                       : ""
                   }
                   alt="img"

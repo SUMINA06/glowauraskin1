@@ -33,7 +33,7 @@ const AdminProducts = () => {
               ...product,
               image:
                 images.length > 0
-                  ? `${apiClient.API_ROOT}${images[0].image_path}`
+                  ? apiClient.resolveImageUrl(images[0].image_path)
                   : "https://via.placeholder.com/120x120",
             };
           } catch (e) {

@@ -1,10 +1,8 @@
 const express = require("express");
-const path = require("path");
-require("dotenv").config({ path: path.join(__dirname, ".env") });
 const multer = require("multer");
 
+const env = require("./config/env");
 const db = require("./config/db");
-const { authMiddleware, adminMiddleware } = require("./config/jwt");
 const { createUserTable, ensureDefaultAdmin } = require("./model/User");
 const { createProductTable } = require("./model/Product");
 const { createImageTable } = require("./model/Image");
@@ -21,18 +19,19 @@ const orderRoutes = require("./routes/orderRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 
 const app = express();
-const frontendDistPath = path.join(__dirname, "..", "frontend-react", "dist");
-
-const allowedOrigins = (process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+const allowedOrigin = env.FRONTEND_URL;
 
 // CORS + security headers
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin || "*");
+  if (origin) {
+    if (!allowedOrigin || origin !== allowedOrigin) {
+      return res.status(403).json({
+        success: false,
+        message: "CORS origin denied",
+      });
+    }
+    res.header("Access-Control-Allow-Origin", allowedOrigin);
     res.header("Vary", "Origin");
   }
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -55,21 +54,6 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve public product images
-app.use(
-  "/uploads/products",
-  express.static(path.join(__dirname, "uploads", "products")),
-);
-// Protect payment screenshots (admin only)
-app.use(
-  "/uploads/payments",
-  authMiddleware,
-  adminMiddleware,
-  express.static(path.join(__dirname, "uploads", "payments")),
-);
-// Serve frontend assets when built
-app.use(express.static(frontendDistPath));
-
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
@@ -77,23 +61,27 @@ app.use("/api/images", imageRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
 
+app.get("/health", async (req, res) => {
+  try {
+    await db.query("SELECT 1 AS result");
+    return res.status(200).json({
+      status: "ok",
+      db: "up",
+    });
+  } catch (error) {
+    return res.status(503).json({
+      status: "error",
+      db: "down",
+      message: error.message,
+    });
+  }
+});
+
 // API 404 handler so SPA fallback does not swallow API errors
 app.use("/api", (req, res) => {
   res.status(404).json({
     success: false,
     message: "API endpoint not found",
-  });
-});
-
-// SPA fallback for client-side routes
-app.get(/.*/, (req, res, next) => {
-  if (req.path.startsWith("/uploads")) {
-    return next();
-  }
-  res.sendFile(path.join(frontendDistPath, "index.html"), (err) => {
-    if (err) {
-      next(err);
-    }
   });
 });
 
@@ -128,6 +116,7 @@ app.use((err, req, res, next) => {
 // Verify the connection to the database
 const verifyDatabaseConnection = async () => {
   try {
+    await db.checkConnectionWithRetry({ retries: 5, delayMs: 2000 });
     const [rows] = await db.query("SELECT 1 AS result");
     console.log("Database connection verified:", rows[0]);
   } catch (error) {
@@ -165,12 +154,12 @@ const initializeTables = async () => {
   }
 };
 
-const port = process.env.PORT || 3000;
+const port = env.PORT;
 
 // Initialize tables and start server
 initializeTables()
   .then(() => {
-    app.listen(port, () => {
+    app.listen(port, "0.0.0.0", () => {
       console.log(`Server is running on port ${port}`);
     });
   })

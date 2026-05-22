@@ -1,6 +1,5 @@
-const { Image } = require('../model/Image');
-const fs = require('fs');
-const path = require('path');
+const { Image } = require("../model/Image");
+const storage = require("../services/storage");
 
 // Upload image for a product
 const uploadImage = async (req, res) => {
@@ -8,47 +7,52 @@ const uploadImage = async (req, res) => {
     const { product_id } = req.body;
 
     if (!product_id) {
-      // Delete uploaded file if product_id is missing
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
-      }
       return res.status(400).json({
         success: false,
-        message: 'Product ID is required'
+        message: "Product ID is required",
       });
     }
 
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No image file provided'
+        message: "No image file provided",
       });
     }
 
+    const uploadedImage = await storage.uploadImage({
+      buffer: req.file.buffer,
+      filename: req.file.originalname,
+      folder: "products",
+    });
+
     const imageData = {
       product_id,
-      image_path: `/uploads/products/${req.file.filename}`,
-      image_name: req.file.originalname
+      image_path: uploadedImage.url,
+      image_public_id: uploadedImage.publicId,
+      image_name: req.file.originalname,
     };
 
-    const result = await Image.create(imageData);
+    let result;
+    try {
+      result = await Image.create(imageData);
+    } catch (error) {
+      await storage.deleteImage(uploadedImage.publicId);
+      throw error;
+    }
 
     res.status(201).json({
       success: true,
-      message: 'Image uploaded successfully',
+      message: "Image uploaded successfully",
       imageId: result[0].insertId,
-      imagePath: imageData.image_path
+      imagePath: imageData.image_path,
     });
   } catch (error) {
-    // Delete uploaded file if error occurs
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
-    }
-    console.error('Error uploading image:', error);
+    console.error("Error uploading image:", error);
     res.status(500).json({
       success: false,
-      message: 'Error uploading image',
-      error: error.message
+      message: "Error uploading image",
+      error: error.message,
     });
   }
 };
@@ -61,7 +65,7 @@ const getProductImages = async (req, res) => {
     if (!product_id) {
       return res.status(400).json({
         success: false,
-        message: 'Product ID is required'
+        message: "Product ID is required",
       });
     }
 
@@ -76,8 +80,8 @@ const getProductImages = async (req, res) => {
     console.error('Error fetching images:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching images',
-      error: error.message
+      message: "Error fetching images",
+      error: error.message,
     });
   }
 };
@@ -96,8 +100,8 @@ const getAllImages = async (req, res) => {
     console.error('Error fetching images:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching images',
-      error: error.message
+      message: "Error fetching images",
+      error: error.message,
     });
   }
 };
@@ -110,7 +114,7 @@ const getImageById = async (req, res) => {
     if (!id) {
       return res.status(400).json({
         success: false,
-        message: 'Image ID is required'
+        message: "Image ID is required",
       });
     }
 
@@ -119,7 +123,7 @@ const getImageById = async (req, res) => {
     if (image.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Image not found'
+        message: "Image not found",
       });
     }
 
@@ -131,8 +135,8 @@ const getImageById = async (req, res) => {
     console.error('Error fetching image:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching image',
-      error: error.message
+      message: "Error fetching image",
+      error: error.message,
     });
   }
 };
@@ -146,7 +150,7 @@ const updateImage = async (req, res) => {
     if (!id) {
       return res.status(400).json({
         success: false,
-        message: 'Image ID is required'
+        message: "Image ID is required",
       });
     }
 
@@ -155,7 +159,7 @@ const updateImage = async (req, res) => {
     if (image.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Image not found'
+        message: "Image not found",
       });
     }
 
@@ -163,14 +167,14 @@ const updateImage = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Image updated successfully'
+      message: "Image updated successfully",
     });
   } catch (error) {
-    console.error('Error updating image:', error);
+    console.error("Error updating image:", error);
     res.status(500).json({
       success: false,
-      message: 'Error updating image',
-      error: error.message
+      message: "Error updating image",
+      error: error.message,
     });
   }
 };
@@ -183,7 +187,7 @@ const deleteImage = async (req, res) => {
     if (!id) {
       return res.status(400).json({
         success: false,
-        message: 'Image ID is required'
+        message: "Image ID is required",
       });
     }
 
@@ -192,28 +196,24 @@ const deleteImage = async (req, res) => {
     if (image.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Image not found'
+        message: "Image not found",
       });
     }
 
-    // Delete file from uploads folder
-    const imagePath = path.join(__dirname, '../..', image[0].image_path);
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
-    }
+      await storage.deleteImage(image[0].image_public_id);
 
     await Image.delete(id);
 
     res.status(200).json({
       success: true,
-      message: 'Image deleted successfully'
+      message: "Image deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting image:', error);
+    console.error("Error deleting image:", error);
     res.status(500).json({
       success: false,
-      message: 'Error deleting image',
-      error: error.message
+      message: "Error deleting image",
+      error: error.message,
     });
   }
 };

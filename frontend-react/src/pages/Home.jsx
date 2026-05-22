@@ -28,7 +28,7 @@ const Home = () => {
             return {
               ...p,
               image: img
-                ? `${apiClient.API_ROOT}${img}`
+                ? apiClient.resolveImageUrl(img)
                 : "https://via.placeholder.com/300x300",
             };
           } catch {

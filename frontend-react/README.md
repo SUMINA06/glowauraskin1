@@ -87,9 +87,7 @@ npm run build
 
 ## API Configuration
 
-The application connects to the backend API at `http://localhost:3000/api`. 
-
-Update the `API_BASE_URL` in `src/api/client.js` if your backend is running on a different port.
+Set `VITE_API_BASE_URL` to your backend URL (e.g., `https://your-backend-url`).
 
 ## Routes
 
@@ -132,9 +130,9 @@ Update the `API_BASE_URL` in `src/api/client.js` if your backend is running on a
 
 To run the project:
 
-1. Ensure the backend is running on `http://localhost:3000`
+1. Ensure the backend is running and `VITE_API_BASE_URL` is configured
 2. Navigate to the frontend-react folder
 3. Run `npm run dev`
-4. Open `http://localhost:5173` in your browser
+4. Open the app in your browser
 
-For admin panel, navigate to `http://localhost:5173/admin`
+For admin panel, navigate to `/admin`

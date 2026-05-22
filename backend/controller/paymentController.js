@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const env = require("../config/env");
 
 // eSewa Configuration
 const ESEWA_CONFIG = {
@@ -60,7 +61,7 @@ exports.initializeEsewa = async (req, res) => {
     const signature = generateEsewaSignature(signatureMessage);
 
     // Frontend URL for callbacks
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl = env.FRONTEND_URL;
 
     const paymentData = {
       amount: amount.toString(),
@@ -151,7 +152,7 @@ exports.initializeKhalti = async (req, res) => {
       });
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl = env.FRONTEND_URL;
 
     // Amount should be in paisa (1 Rs = 100 paisa)
     const amountInPaisa = Math.round(parseFloat(amount) * 100);

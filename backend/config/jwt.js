@@ -1,11 +1,8 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const env = require("./env");
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_change_in_production';
-const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d'; // Token expires in 7 days
-
-if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'your_jwt_secret_key_change_in_production') {
-  throw new Error('JWT_SECRET must be set in production');
-}
+const JWT_SECRET = env.JWT_SECRET;
+const JWT_EXPIRY = env.JWT_EXPIRY; // Token expires in 7 days
 
 // Generate JWT token
 const generateToken = (userId, email, username, role) => {

@@ -16,7 +16,9 @@ Required backend env vars:
 - JWT_EXPIRY
 - NODE_ENV=production
 - FRONTEND_URL=https://YOUR-FRONTEND-URL
-- CORS_ORIGIN=https://YOUR-FRONTEND-URL
+- CLOUDINARY_CLOUD_NAME
+- CLOUDINARY_API_KEY
+- CLOUDINARY_API_SECRET
 - ADMIN_EMAIL
 - ADMIN_USERNAME
 - ADMIN_PASSWORD
@@ -25,6 +27,7 @@ Required backend env vars:
 Notes:
 - `ADMIN_*` is used to create the first admin user at startup.
 - `ADMIN_SETUP_TOKEN` is required to create additional admins via `/api/users/admin/register` in production. Send it as `X-Admin-Setup-Token`.
+- Uploads use Cloudinary in production; no local filesystem storage is used.
 
 ## 2) Backend service (Express)
 Repo path: `backend`
@@ -43,6 +46,7 @@ Frontend env vars:
 
 ## 4) Health checks
 - Backend: `GET /api/products` should return data.
+- Backend: `GET /health` should return `{ status: "ok" }`.
 - Frontend: open the Railway frontend URL and confirm it loads.
 
 ## 5) Safe Browsing recheck

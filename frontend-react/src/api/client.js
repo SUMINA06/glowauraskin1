@@ -1,14 +1,27 @@
 import axios from "axios";
 
-// Use environment variable when available, otherwise default to backend port 3000.
-const RAW_API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+if (!RAW_API_BASE_URL) {
+  throw new Error("VITE_API_BASE_URL is required");
+}
 
 const API_BASE_URL = RAW_API_BASE_URL.endsWith("/api")
   ? RAW_API_BASE_URL
   : `${RAW_API_BASE_URL.replace(/\/$/, "")}/api`;
 
 const API_ROOT = API_BASE_URL.replace(/\/api\/?$/, "");
+
+const resolveImageUrl = (path) => {
+  if (!path) {
+    return "";
+  }
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${API_ROOT}${normalized}`;
+};
 
 // Helper function to get JWT token
 const getAdminToken = () => {
@@ -86,6 +99,7 @@ const apiClient = {
   },
 
   API_ROOT,
+  resolveImageUrl,
 
   // Cart endpoints
   getUserCart: async (userId) => {

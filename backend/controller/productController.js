@@ -1,6 +1,6 @@
-const fs = require("fs");
 const { Product } = require("../model/Product");
 const { Image } = require("../model/Image");
+const storage = require("../services/storage");
 
 // Create a new product
 const createProduct = async (req, res) => {
@@ -9,9 +9,6 @@ const createProduct = async (req, res) => {
 
     // Validate required fields
     if (!name || !price) {
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
-      }
       return res.status(400).json({
         success: false,
         message: "Product name and price are required",
@@ -30,14 +27,24 @@ const createProduct = async (req, res) => {
     const productId = result[0].insertId;
 
     if (req.file) {
+      let uploadedImage;
       try {
+        uploadedImage = await storage.uploadImage({
+          buffer: req.file.buffer,
+          filename: req.file.originalname,
+          folder: "products",
+        });
+
         await Image.create({
           product_id: productId,
-          image_path: `/uploads/products/${req.file.filename}`,
+          image_path: uploadedImage.url,
+          image_public_id: uploadedImage.publicId,
           image_name: req.file.originalname,
         });
       } catch (imageError) {
-        fs.unlinkSync(req.file.path);
+        if (uploadedImage?.publicId) {
+          await storage.deleteImage(uploadedImage.publicId);
+        }
         await Product.delete(productId);
         throw imageError;
       }
@@ -198,9 +205,6 @@ const updateProduct = async (req, res) => {
     const { name, description, price, category, stock } = req.body;
 
     if (!id) {
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
-      }
       return res.status(400).json({
         success: false,
         message: "Product ID is required",
@@ -210,9 +214,6 @@ const updateProduct = async (req, res) => {
     // Check if product exists
     const product = await Product.findById(id);
     if (product.length === 0) {
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
-      }
       return res.status(404).json({
         success: false,
         message: "Product not found",
@@ -230,11 +231,26 @@ const updateProduct = async (req, res) => {
     await Product.update(id, updates);
 
     if (req.file) {
-      await Image.create({
-        product_id: id,
-        image_path: `/uploads/products/${req.file.filename}`,
-        image_name: req.file.originalname,
-      });
+      let uploadedImage;
+      try {
+        uploadedImage = await storage.uploadImage({
+          buffer: req.file.buffer,
+          filename: req.file.originalname,
+          folder: "products",
+        });
+
+        await Image.create({
+          product_id: id,
+          image_path: uploadedImage.url,
+          image_public_id: uploadedImage.publicId,
+          image_name: req.file.originalname,
+        });
+      } catch (imageError) {
+        if (uploadedImage?.publicId) {
+          await storage.deleteImage(uploadedImage.publicId);
+        }
+        throw imageError;
+      }
     }
 
     res.status(200).json({
@@ -271,6 +287,11 @@ const deleteProduct = async (req, res) => {
         message: "Product not found",
       });
     }
+
+    const images = await Image.findByProductId(id);
+    await Promise.all(
+      (images || []).map((image) => storage.deleteImage(image.image_public_id)),
+    );
 
     await Product.delete(id);
 
