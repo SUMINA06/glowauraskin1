@@ -134,6 +134,80 @@
   box-shadow: 0 6px 16px rgba(45, 126, 247, 0.2);
 }
 
+.btn-payment-small.payment-confirmed {
+  background: linear-gradient(135deg, #38b856, #258a3d);
+  box-shadow: 0 4px 12px rgba(56, 184, 86, 0.2);
+}
+
+.btn-payment-small.payment-action-needed {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.btn-payment-proof {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #2b6cb0;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.payment-proof-missing {
+  color: #7c7c7c;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.payment-cod-status {
+  color: #2b6cb0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.payment-proof-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.payment-proof-modal {
+  position: relative;
+  width: min(560px, 90vw);
+  max-height: 80vh;
+  padding: 24px;
+  background: #fff;
+  border-radius: 10px;
+}
+
+.payment-proof-modal img {
+  display: block;
+  width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+}
+
+.payment-proof-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: #ff6b9d;
+  color: #fff;
+  cursor: pointer;
+}
+
 .payment-pending,
 .payment-pending-small {
   display: inline-flex;

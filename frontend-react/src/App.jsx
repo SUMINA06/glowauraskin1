@@ -17,6 +17,7 @@ import Register from "./pages/Register";
 import Artisans from "./pages/Artisans";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import Products from "./pages/Products";
 import AdminDashboard from "./admin/pages/Dashboard";
 import AdminProducts from "./admin/pages/Products";
@@ -58,6 +59,7 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
 
         <Route
           path="/wooden"

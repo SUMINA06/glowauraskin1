@@ -18,8 +18,7 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(null);
   const [deleting, setDeleting] = useState(null);
-  const [selectedPaymentImage, setSelectedPaymentImage] = useState(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [proofUrl, setProofUrl] = useState(null);
   const [notification, setNotification] = useState("");
   const [notificationType, setNotificationType] = useState("success");
 
@@ -42,28 +41,31 @@ const Orders = () => {
     }
   };
 
-  const buildImageUrl = (path) => {
-    if (!path) return null;
-    return path.startsWith("http") ? path : `${apiClient.API_ROOT}${path}`;
-  };
-
-  const openPaymentModal = (screenshotPath) => {
-    const url = buildImageUrl(screenshotPath);
-    if (!url) return;
-    setSelectedPaymentImage(url);
-    setShowPaymentModal(true);
-  };
-
-  const closePaymentModal = () => {
-    setShowPaymentModal(false);
-    setSelectedPaymentImage(null);
-  };
-
   const showNotification = (message, type = "success") => {
     setNotification(message);
     setNotificationType(type);
     window.setTimeout(() => setNotification(""), 4000);
   };
+
+  const getProofUrl = (order) => {
+    const proof = order.paymentScreenshot || order.payment_screenshot;
+    if (!proof) return null;
+    return proof.startsWith("http") ? proof : `${apiClient.API_ROOT}${proof}`;
+  };
+
+  const getPaymentMethodLabel = (order) => {
+    const method = String(
+      order.paymentMethod || order.payment_method || "N/A",
+    ).toLowerCase();
+
+    if (method === "esewa") return "eSewa";
+    if (method === "qr") return "QR";
+    if (method === "cod") return "COD";
+    if (method === "khalti") return "Khalti";
+    return order.paymentMethod || order.payment_method || "N/A";
+  };
+
+  const closeProof = () => setProofUrl(null);
 
   const updateStatus = async (orderId, newStatus) => {
     setSaving(orderId);
@@ -203,39 +205,38 @@ const Orders = () => {
                     </td>
                     <td>
                       <div className="items-preview">
-                        {renderItems(order.orderItems)}
-                        {order.orderItems?.length > 2 && (
+                        {renderItems(order.orderItems || order.items)}
+                        {(order.orderItems || order.items)?.length > 2 && (
                           <small className="more-items">
-                            +{order.orderItems.length - 2} more
+                            +{(order.orderItems || order.items).length - 2} more
                           </small>
                         )}
                       </div>
                     </td>
                     <td>
                       <div className="amount-cell">
-                        <strong>Rs {order.totalPrice ?? order.total_amount ?? 0}</strong>
+                        <strong>Rs {order.totalAmount ?? order.total_amount ?? 0}</strong>
                       </div>
                     </td>
                     <td>
                       <div className="payment-cell payment-cell-compact">
                         <div className="payment-method-badge">
-                          {order.paymentMethod || order.payment_method || "N/A"}
+                          {getPaymentMethodLabel(order)}
                         </div>
-                        {order.paymentScreenshot || order.payment_screenshot ? (
-                          <button
-                            type="button"
-                            className="btn-payment-small"
-                            onClick={() =>
-                              openPaymentModal(
-                                order.paymentScreenshot || order.payment_screenshot
-                              )
-                            }
-                            title="Preview payment screenshot"
-                          >
-                            Payment Done
-                          </button>
-                        ) : (
-                          <span className="payment-pending-small">Pending</span>
+                        {getPaymentMethodLabel(order) !== "COD" && (
+                          getProofUrl(order) ? (
+                            <button
+                              type="button"
+                              className="btn-payment-proof"
+                              onClick={() => setProofUrl(getProofUrl(order))}
+                            >
+                              View Proof
+                            </button>
+                          ) : (
+                            <span className="payment-proof-missing">
+                              No proof uploaded
+                            </span>
+                          )
                         )}
                       </div>
                     </td>
@@ -286,29 +287,17 @@ const Orders = () => {
         </div>
       </div>
 
-      {showPaymentModal && (
-        <div className="modal-backdrop" onClick={closePaymentModal}>
-          <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              className="modal-close"
-              onClick={closePaymentModal}
-              aria-label="Close modal"
-            >
-              ×
+      {proofUrl && (
+        <div className="payment-proof-modal-backdrop" onClick={closeProof}>
+          <div className="payment-proof-modal" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="payment-proof-modal-close" onClick={closeProof}>
+              X
             </button>
-            <div className="modal-body">
-              {selectedPaymentImage && (
-                <img
-                  src={selectedPaymentImage}
-                  alt="Payment Screenshot"
-                  className="modal-image"
-                />
-              )}
-            </div>
+            <img src={proofUrl} alt="Payment proof" />
           </div>
         </div>
       )}
+
     </AdminLayout>
   );
 };

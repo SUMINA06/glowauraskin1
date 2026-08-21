@@ -52,10 +52,7 @@ const Footer = () => {
               src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Esewa_logo.webp/960px-Esewa_logo.webp.png?20220908142913"
               alt="eSewa"
             />
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0j99ZjCtg1sj_OF5dmWJT87cQekV0pvbmUQ&s"
-              alt="Khalti"
-            />
+           
           </div>
           <div className="secure-lock">100% Secure Payments</div>
         </div>

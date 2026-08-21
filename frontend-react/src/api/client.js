@@ -5,551 +5,653 @@ const API_BASE_URL = "/api";
 const API_ROOT = API_BASE_URL.replace(/\/api\/?$/, "");
 
 const resolveImageUrl = (path) => {
-  if (!path) {
-    return "";
-  }
-  if (path.startsWith("http://") || path.startsWith("https://")) {
+  if (!path) return "";
+
+  if (
+    path.startsWith("http://") ||
+    path.startsWith("https://")
+  ) {
     return path;
   }
-  const normalized = path.startsWith("/") ? path : `/${path}`;
+
+  const normalized = path.startsWith("/")
+    ? path
+    : `/${path}`;
+
   return `${API_ROOT}${normalized}`;
 };
 
-// Helper function to get JWT token
+// =====================================================
+// ADMIN TOKEN
+// =====================================================
+
 const getAdminToken = () => {
   try {
-    const adminData = localStorage.getItem("adminToken");
-    return adminData ? adminData : null;
+    return (
+      localStorage.getItem("adminToken") ||
+      localStorage.getItem("userToken")
+    );
   } catch (error) {
     console.error("Error getting admin token:", error);
     return null;
   }
 };
 
-// Helper function to get JWT token from loginResponse
 const saveAdminToken = (token) => {
   if (token) {
     localStorage.setItem("adminToken", token);
   }
 };
 
-// Create axios instance with default headers
+// =====================================================
+// AXIOS INSTANCE
+// =====================================================
+
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Add request interceptor to include JWT token
+// =====================================================
+// REQUEST INTERCEPTOR
+// =====================================================
+
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = getAdminToken();
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add response interceptor to handle token expiration
+// =====================================================
+// RESPONSE INTERCEPTOR
+// =====================================================
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem("adminToken");
       localStorage.removeItem("adminUser");
     }
+
     return Promise.reject(error);
   }
 );
 
+// =====================================================
+// API CLIENT
+// =====================================================
+
 const apiClient = {
-  // Product endpoints
-  getAllProducts: async () => {
-    try {
-      const response = await axiosInstance.get(`/products`);
-      // Backend returns { success, data, count } — normalize to return the inner data array when present
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      throw error;
-    }
-  },
-
-  getProductById: async (id) => {
-    try {
-      const response = await axiosInstance.get(`/products/${id}`);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching product:", error);
-      throw error;
-    }
-  },
-
   API_ROOT,
   resolveImageUrl,
 
-  // Cart endpoints
-  getUserCart: async (userId) => {
-    try {
-      const response = await axiosInstance.get(`/cart/user/${userId}`);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching user cart:", error);
-      throw error;
-    }
+  // ===================================================
+  // PRODUCTS
+  // ===================================================
+
+  getAllProducts: async () => {
+    const response = await axiosInstance.get("/products");
+
+    return {
+      data: response.data?.data ?? response.data,
+    };
   },
 
-  addCartItem: async (cartItem) => {
-    try {
-      const response = await axiosInstance.post(`/cart`, cartItem);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error adding cart item:", error);
-      throw error;
-    }
+  getProductById: async (id) => {
+    const response = await axiosInstance.get(
+      `/products/${id}`
+    );
+
+    return {
+      data: response.data?.data ?? response.data,
+    };
   },
 
-  updateCartItem: async (id, updateData) => {
-    try {
-      const response = await axiosInstance.patch(`/cart/${id}`, updateData);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error updating cart item:", error);
-      throw error;
-    }
-  },
+  createProduct: async (
+    productData,
+    imageFile = null
+  ) => {
+    let response;
 
-  deleteCartItem: async (id) => {
-    try {
-      const response = await axiosInstance.delete(`/cart/${id}`);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error deleting cart item:", error);
-      throw error;
-    }
-  },
+    if (imageFile) {
+      const fd = new FormData();
 
-  clearUserCart: async (userId) => {
-    try {
-      const response = await axiosInstance.delete(`/cart/user/${userId}`);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error clearing user cart:", error);
-      throw error;
-    }
-  },
-
-  checkStock: async (productId, quantity) => {
-    try {
-      const response = await axiosInstance.get(
-        `/orders/stock/${productId}/${quantity}`,
-      );
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error checking stock:", error);
-      throw error;
-    }
-  },
-
-  // Image endpoints
-  getProductImages: async (productId) => {
-    try {
-      const response = await axiosInstance.get(
-        `/images/product/${productId}`,
-      );
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching images:", error);
-      throw error;
-    }
-  },
-
-  // User endpoints
-  getAllUsers: async () => {
-    try {
-      const response = await axiosInstance.get(`/users`);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      throw error;
-    }
-  },
-
-  getUserById: async (id) => {
-    try {
-      const response = await axiosInstance.get(`/users/${id}`);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      throw error;
-    }
-  },
-
-  getUserByEmail: async (email) => {
-    try {
-      const response = await axiosInstance.get(
-        `/users/email/${encodeURIComponent(email)}`,
-      );
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching user by email:", error);
-      throw error;
-    }
-  },
-
-  createUser: async (userData) => {
-    try {
-      const response = await axiosInstance.post(`/users`, userData);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error creating user:", error);
-      throw error;
-    }
-  },
-
-  loginUser: async (credentials) => {
-    try {
-      const response = await axiosInstance.post(`/users/login`, credentials);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error logging in user:", error);
-      throw error;
-    }
-  },
-
-  adminLogin: async (credentials) => {
-    try {
-      const response = await axiosInstance.post(
-        `/users/admin/login`,
-        credentials,
-      );
-      // Save token if provided
-      if (response.data?.token) {
-        saveAdminToken(response.data.token);
-      }
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error logging in admin:", error);
-      throw error;
-    }
-  },
-
-  verifyAdminToken: async () => {
-    try {
-      const response = await axiosInstance.get(`/users/admin/verify`);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error verifying admin token:", error);
-      throw error;
-    }
-  },
-
-  adminRegister: async (userData) => {
-    try {
-      const response = await axiosInstance.post(
-        `/users/admin/register`,
-        userData,
-      );
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error registering admin:", error);
-      throw error;
-    }
-  },
-
-  updateUser: async (id, userData) => {
-    try {
-      const response = await axiosInstance.put(`/users/${id}`, userData);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error updating user:", error);
-      throw error;
-    }
-  },
-
-  deleteUser: async (id) => {
-    try {
-      const response = await axiosInstance.delete(`/users/${id}`);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      throw error;
-    }
-  },
-
-  createOrder: async (orderData) => {
-    try {
-      const response = await axiosInstance.post(`/orders`, orderData);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error creating order:", error);
-      throw error;
-    }
-  },
-
-  // Image collection
-  getAllImages: async () => {
-    try {
-      const response = await axiosInstance.get(`/images`);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching images list:", error);
-      throw error;
-    }
-  },
-
-  getImageById: async (id) => {
-    try {
-      const response = await axiosInstance.get(`/images/${id}`);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error fetching image:", error);
-      throw error;
-    }
-  },
-
-  uploadImage: async (formData) => {
-    try {
-      const response = await axiosInstance.post(
-        `/images/upload`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw error;
-    }
-  },
-
-  updateImage: async (id, imageData) => {
-    try {
-      const response = await axiosInstance.put(
-        `/images/${id}`,
-        imageData,
-      );
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error updating image:", error);
-      throw error;
-    }
-  },
-
-  deleteImage: async (id) => {
-    try {
-      const response = await axiosInstance.delete(`/images/${id}`);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error deleting image:", error);
-      throw error;
-    }
-  },
-
-  // Orders
-  getAllOrders: async () => {
-    try {
-      const response = await axiosInstance.get(`/orders`);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      // If orders endpoint is not implemented on backend, return empty list instead of throwing
-      if (error?.response?.status === 404) {
-        console.warn("Orders endpoint not found (404) — returning empty list");
-        return { data: [] };
-      }
-      console.error("Error fetching orders:", error);
-      throw error;
-    }
-  },
-
-  getOrderById: async (id) => {
-    try {
-      const response = await axiosInstance.get(`/orders/${id}`);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching order:", error);
-      throw error;
-    }
-  },
-
-  updateOrderStatus: async (orderId, statusData) => {
-    try {
-      const response = await axiosInstance.put(
-        `/orders/${orderId}`,
-        { status: statusData.order_status ?? statusData.status },
-      );
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      throw error;
-    }
-  },
-
-  deleteOrder: async (orderId) => {
-    try {
-      const response = await axiosInstance.delete(`/orders/${orderId}`);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error deleting order:", error);
-      throw error;
-    }
-  },
-
-  // Product create/update/delete (supports optional image upload)
-  createProduct: async (productData, imageFile = null) => {
-    try {
-      let response;
-      if (imageFile) {
-        const fd = new FormData();
-        Object.entries(productData).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
+      Object.entries(productData).forEach(
+        ([key, value]) => {
+          if (
+            value !== undefined &&
+            value !== null
+          ) {
             fd.append(key, value);
           }
-        });
-        fd.append("image", imageFile);
+        }
+      );
 
-        response = await axiosInstance.post(`/products`, fd);
-      } else {
-        response = await axiosInstance.post(
-          `/products`,
-          productData,
-          {
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
+      fd.append("image", imageFile);
 
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error creating product:", error);
-      throw error;
+      response = await axiosInstance.post(
+        "/products",
+        fd
+      );
+    } else {
+      response = await axiosInstance.post(
+        "/products",
+        productData
+      );
     }
+
+    return {
+      data: response.data,
+    };
   },
 
-  updateProduct: async (id, productData, imageFile = null) => {
-    try {
-      let response;
-      if (imageFile) {
-        const fd = new FormData();
-        Object.entries(productData).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
+  updateProduct: async (
+    id,
+    productData,
+    imageFile = null
+  ) => {
+    let response;
+
+    if (imageFile) {
+      const fd = new FormData();
+
+      Object.entries(productData).forEach(
+        ([key, value]) => {
+          if (
+            value !== undefined &&
+            value !== null
+          ) {
             fd.append(key, value);
           }
-        });
-        fd.append("image", imageFile);
+        }
+      );
 
-        response = await axiosInstance.put(`/products/${id}`, fd);
-      } else {
-        response = await axiosInstance.put(
-          `/products/${id}`,
-          productData,
-          {
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-      }
+      fd.append("image", imageFile);
 
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error updating product:", error);
-      throw error;
+      response = await axiosInstance.put(
+        `/products/${id}`,
+        fd
+      );
+    } else {
+      response = await axiosInstance.put(
+        `/products/${id}`,
+        productData
+      );
     }
+
+    return {
+      data: response.data,
+    };
   },
 
   deleteProduct: async (id) => {
-    try {
-      const response = await axiosInstance.delete(`/products/${id}`);
-      return { data: response.data };
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      throw error;
-    }
+    const response = await axiosInstance.delete(
+      `/products/${id}`
+    );
+
+    return {
+      data: response.data,
+    };
   },
 
-  // Utility helpers
-  API_ROOT,
+  // ===================================================
+  // CART
+  // ===================================================
 
-  // Payment methods
+  getUserCart: async (userId) => {
+    const response = await axiosInstance.get(
+      `/cart/user/${userId}`
+    );
+
+    return {
+      data: response.data?.data ?? response.data,
+    };
+  },
+
+  addCartItem: async (cartItem) => {
+    const response = await axiosInstance.post(
+      "/cart",
+      cartItem
+    );
+
+    return {
+      data: response.data?.data ?? response.data,
+    };
+  },
+
+  updateCartItem: async (id, updateData) => {
+    const response = await axiosInstance.patch(
+      `/cart/${id}`,
+      updateData
+    );
+
+    return {
+      data: response.data?.data ?? response.data,
+    };
+  },
+
+  deleteCartItem: async (id) => {
+    const response = await axiosInstance.delete(
+      `/cart/${id}`
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  clearUserCart: async (userId) => {
+    const response = await axiosInstance.delete(
+      `/cart/user/${userId}`
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  checkStock: async (productId, quantity) => {
+    const response = await axiosInstance.get(
+      `/orders/stock/${productId}/${quantity}`
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  // ===================================================
+  // USERS
+  // ===================================================
+
+  getAllUsers: async () => {
+    const response = await axiosInstance.get(
+      "/users"
+    );
+
+    return {
+      data: response.data?.data ?? response.data,
+    };
+  },
+
+  getUserById: async (id) => {
+    const response = await axiosInstance.get(
+      `/users/${id}`
+    );
+
+    return {
+      data: response.data?.data ?? response.data,
+    };
+  },
+
+  getUserByEmail: async (email) => {
+    const response = await axiosInstance.get(
+      `/users/email/${encodeURIComponent(email)}`
+    );
+
+    return {
+      data: response.data?.data ?? response.data,
+    };
+  },
+
+  createUser: async (userData) => {
+    const response = await axiosInstance.post(
+      "/users",
+      userData
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  loginUser: async (credentials) => {
+    const response = await axiosInstance.post(
+      "/users/login",
+      credentials
+    );
+
+    if (response.data?.token) {
+      localStorage.setItem("userToken", response.data.token);
+    }
+
+    return {
+      data: response.data,
+    };
+  },
+
+  updateUser: async (id, userData) => {
+    const response = await axiosInstance.put(
+      `/users/${id}`,
+      userData
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  deleteUser: async (id) => {
+    const response = await axiosInstance.delete(
+      `/users/${id}`
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  // ===================================================
+  // ADMIN
+  // ===================================================
+
+  adminLogin: async (credentials) => {
+    const response = await axiosInstance.post(
+      "/users/admin/login",
+      credentials
+    );
+
+    if (response.data?.token) {
+      saveAdminToken(response.data.token);
+    }
+
+    return {
+      data: response.data,
+    };
+  },
+
+  verifyAdminToken: async () => {
+    const response = await axiosInstance.get(
+      "/users/admin/verify"
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  adminRegister: async (userData) => {
+    const response = await axiosInstance.post(
+      "/users/admin/register",
+      userData
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  // ===================================================
+  // ORDERS
+  // ===================================================
+
+  createOrder: async (orderData) => {
+    const response = await axiosInstance.post(
+      "/orders",
+      orderData
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  getAllOrders: async () => {
+    const response = await axiosInstance.get(
+      "/orders"
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
+  },
+
+  getOrderById: async (id) => {
+    const response = await axiosInstance.get(
+      `/orders/${id}`
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
+  },
+
+  uploadPaymentProof: async (orderId, file) => {
+    const formData = new FormData();
+    formData.append("paymentProof", file);
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      if (user?.id) formData.append("userId", String(user.id));
+    } catch {
+      // The backend still validates the order reference.
+    }
+    const response = await axiosInstance.post(
+      `/orders/${orderId}/payment-proof`,
+      formData,
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  updateOrderStatus: async (
+    orderId,
+    statusData
+  ) => {
+    const payload = {};
+    const status = statusData.order_status ?? statusData.status;
+    if (status !== undefined) payload.status = status;
+    if (statusData.payment_status !== undefined) {
+      payload.payment_status = statusData.payment_status;
+    }
+    if (statusData.paymentStatus !== undefined) {
+      payload.paymentStatus = statusData.paymentStatus;
+    }
+
+    const response = await axiosInstance.put(
+      `/orders/${orderId}`,
+      payload
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
+  },
+
+  deleteOrder: async (orderId) => {
+    const response = await axiosInstance.delete(
+      `/orders/${orderId}`
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  // ===================================================
+  // IMAGES
+  // ===================================================
+
+  getProductImages: async (productId) => {
+    const response = await axiosInstance.get(
+      `/images/product/${productId}`
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
+  },
+
+  getAllImages: async () => {
+    const response = await axiosInstance.get(
+      "/images"
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
+  },
+
+  getImageById: async (id) => {
+    const response = await axiosInstance.get(
+      `/images/${id}`
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  uploadImage: async (formData) => {
+    const response = await axiosInstance.post(
+      "/images/upload",
+      formData
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  updateImage: async (id, imageData) => {
+    const response = await axiosInstance.put(
+      `/images/${id}`,
+      imageData
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  deleteImage: async (id) => {
+    const response = await axiosInstance.delete(
+      `/images/${id}`
+    );
+
+    return {
+      data: response.data,
+    };
+  },
+
+  // ===================================================
+  // PAYMENT CONFIG
+  // ===================================================
+
   getPaymentConfig: async () => {
-    try {
-      const response = await axiosInstance.get(`/payment/config`);
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error fetching payment config:", error);
-      throw error;
-    }
+    const response = await axiosInstance.get(
+      "/payment/config"
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
   },
 
-  // eSewa Payment
+  // ===================================================
+  // ESEWA
+  // POST /api/payment/esewa/initialize
+  // ===================================================
+
   initializeEsewa: async (paymentData) => {
-    try {
-      const response = await axiosInstance.post(
-        `/payment/esewa/initialize`,
-        paymentData,
-      );
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error initializing eSewa:", error);
-      throw error;
-    }
+    const response = await axiosInstance.post(
+      "/payment/esewa/initialize",
+      paymentData
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
   },
 
+  // eSewa verification
+  // GET /api/payment/esewa/verify
   verifyEsewa: async (data) => {
-    try {
-      const response = await axiosInstance.post(
-        `/payment/esewa/verify`,
-        { data },
-      );
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error verifying eSewa:", error);
-      throw error;
-    }
+    const response = await axiosInstance.post(
+      "/payment/esewa/verify",
+      data
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
   },
 
-  // Khalti Payment
+  // ===================================================
+  // KHALTI
+  // POST /api/payment/khalti/initialize
+  // ===================================================
+
   initializeKhalti: async (paymentData) => {
-    try {
-      const response = await axiosInstance.post(
-        `/payment/khalti/initialize`,
-        paymentData,
-      );
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error initializing Khalti:", error);
-      throw error;
-    }
+    const response = await axiosInstance.post(
+      "/payment/khalti/initialize",
+      paymentData
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
   },
 
-  verifyKhalti: async (verificationData) => {
-    try {
-      const response = await axiosInstance.post(
-        `/payment/khalti/verify`,
-        verificationData,
-      );
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error verifying Khalti:", error);
-      throw error;
-    }
+  // Khalti verification
+  // GET /api/payment/khalti/verify
+  verifyKhalti: async (data) => {
+    const response = await axiosInstance.post(
+      "/payment/khalti/verify",
+      data
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
   },
 
-  // Cash on Delivery
+  // ===================================================
+  // CASH ON DELIVERY
+  // IMPORTANT:
+  // Backend route = POST /payment/cod
+  // NOT /payment/cod/process
+  // ===================================================
+
   processCOD: async (orderData) => {
-    try {
-      const response = await axiosInstance.post(
-        `/payment/cod/process`,
-        orderData,
-      );
-      return { data: response.data?.data ?? response.data };
-    } catch (error) {
-      console.error("Error processing COD:", error);
-      throw error;
-    }
+    const response = await axiosInstance.post(
+      "/payment/cod",
+      orderData
+    );
+
+    return {
+      data:
+        response.data?.data ??
+        response.data,
+    };
   },
 };
 

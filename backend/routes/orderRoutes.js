@@ -65,6 +65,13 @@ router.get(
   orderController.getAllOrders
 );
 
+router.post(
+  "/:orderId/payment-proof",
+  authMiddleware,
+  upload.single("paymentProof"),
+  orderController.uploadPaymentProof
+);
+
 router.get(
   "/:id",
   authMiddleware,
