@@ -5,7 +5,6 @@ import { CartContext } from "../context/CartContext";
 const Header = () => {
   const { cart, getTotalPrice } = useContext(CartContext);
   const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const totalItems = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
@@ -24,14 +23,6 @@ const Header = () => {
   };
 
   useEffect(() => {
-    // Check if admin is logged in
-    const adminUser = localStorage.getItem("adminUser");
-    if (adminUser) {
-      setIsAdmin(true);
-      navigate("/admin/dashboard");
-      return;
-    }
-
     // Get regular website user
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -41,7 +32,7 @@ const Header = () => {
         console.error("Error parsing user data", err);
       }
     }
-  }, [navigate]);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -103,7 +94,7 @@ const Header = () => {
                   </>
                 ) : (
                   <>
-                    <Link to={"./login"}>Login</Link> /
+                    <Link to={"./login"}>Login</Link> 
                     <Link to={"./register"}>Register</Link>
                   </>
                 )}

@@ -80,11 +80,19 @@ const createAdminUser = async (req, res) => {
     const [existingByEmail] = await User.findByEmail(email);
     const [existingByUsername] = await User.findByUsername(username);
 
-    if ((existingByEmail && existingByEmail.length > 0) || (existingByUsername && existingByUsername.length > 0)) {
-      console.log("Admin user already exists");
-      return res.status(200).json({
-        success: true,
-        message: "Admin user already exists",
+    if (existingByEmail && existingByEmail.length > 0) {
+      console.warn("Admin registration rejected: email already exists");
+      return res.status(409).json({
+        success: false,
+        message: "An admin account with this email already exists. Use the admin login page.",
+      });
+    }
+
+    if (existingByUsername && existingByUsername.length > 0) {
+      console.warn("Admin registration rejected: username already exists");
+      return res.status(409).json({
+        success: false,
+        message: "An admin account with this username already exists. Choose another username.",
       });
     }
 
@@ -100,19 +108,20 @@ const createAdminUser = async (req, res) => {
 
     if (error.code === "ER_DUP_ENTRY") {
       if (error.message.includes("email")) {
-        console.log("Admin user already exists");
-        return res.status(200).json({
-          success: true,
-          message: "Admin user already exists",
+        console.warn("Admin registration rejected: duplicate email", error.message);
+        return res.status(409).json({
+          success: false,
+          message: "An admin account with this email already exists. Use the admin login page.",
         });
       }
       if (error.message.includes("username")) {
-        console.warn("Admin username already exists");
-        return res.status(400).json({
+        console.warn("Admin registration rejected: duplicate username", error.message);
+        return res.status(409).json({
           success: false,
-          message: "Username already exists",
+          message: "An admin account with this username already exists. Choose another username.",
         });
       }
+      console.error("Admin registration database error:", error);
       return res.status(400).json({
         success: false,
         message: "Email or username already exists",

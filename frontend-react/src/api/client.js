@@ -1,18 +1,6 @@
 import axios from "axios";
 
-let RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-if (!RAW_API_BASE_URL && import.meta.env.DEV) {
-  RAW_API_BASE_URL = "http://localhost:3000";
-}
-
-if (!RAW_API_BASE_URL) {
-  throw new Error("VITE_API_BASE_URL is required");
-}
-
-const API_BASE_URL = RAW_API_BASE_URL.endsWith("/api")
-  ? RAW_API_BASE_URL
-  : `${RAW_API_BASE_URL.replace(/\/$/, "")}/api`;
+const API_BASE_URL = "/api";
 
 const API_ROOT = API_BASE_URL.replace(/\/api\/?$/, "");
 
@@ -72,8 +60,6 @@ axiosInstance.interceptors.response.use(
       // Token expired or invalid
       localStorage.removeItem("adminToken");
       localStorage.removeItem("adminUser");
-      // Optionally redirect to login page if using React Router
-      window.location.href = "/admin/login";
     }
     return Promise.reject(error);
   }

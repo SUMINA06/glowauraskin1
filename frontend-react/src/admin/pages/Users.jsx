@@ -8,6 +8,7 @@ import "../css/tables.css";
 const initialForm = {
   username: "",
   email: "",
+  password: "",
   phone: "",
   city: "",
 };
@@ -47,6 +48,7 @@ const AdminUsers = () => {
     setForm({
       username: user.username || "",
       email: user.email || "",
+      password: "",
       phone: user.phone || "",
       city: user.city || "",
     });
@@ -167,6 +169,19 @@ const AdminUsers = () => {
                 required
               />
             </div>
+            {!editingUserId && (
+              <div className="form-row">
+                <label>Password</label>
+                <input
+                  type="password"
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
+                  required
+                />
+              </div>
+            )}
             <div className="form-row">
               <label>Phone</label>
               <input

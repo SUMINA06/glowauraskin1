@@ -43,7 +43,9 @@ const AdminRegisterComponent = () => {
 
       const userId = res.data?.userId;
       if (!userId) {
-        throw new Error("No userId returned from server");
+        throw new Error(
+          res.data?.message || "The server did not return a user ID.",
+        );
       }
 
       // Get the created user data
@@ -64,6 +66,7 @@ const AdminRegisterComponent = () => {
       console.error("Admin registration failed:", err);
       setError(
         err.response?.data?.message ||
+          err.message ||
           "Registration failed. Please check your details and try again.",
       );
     } finally {

@@ -19,11 +19,11 @@ echo.
 
 echo. 🚀 Starting development server...
 echo.
-echo. Available at: http://localhost:5173
+echo. Available at: http://localhost:5174
 echo.
 echo. Routes:
-echo.   Frontend Home:    http://localhost:5173/
-echo.   Admin Dashboard:  http://localhost:5173/admin
+echo.   Frontend Home:    http://localhost:5174/
+echo.   Admin Dashboard:  http://localhost:5174/admin
 echo.   Product Categories: /wooden, /art, /bag, /clay, /jute, /wall, /pasmina
 echo.
 echo. Press Ctrl+C to stop the server

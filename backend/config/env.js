@@ -26,7 +26,7 @@ if (missing.length > 0) {
 
 const env = {
   NODE_ENV: process.env.NODE_ENV || "development",
-  PORT: process.env.PORT || 3000,
+  PORT: process.env.PORT || 2000,
   FRONTEND_URL: process.env.FRONTEND_URL || "",
   CORS_ORIGIN: process.env.FRONTEND_URL || "",
   DB_HOST: process.env.DB_HOST,

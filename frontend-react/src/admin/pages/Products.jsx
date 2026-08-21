@@ -104,7 +104,12 @@ const AdminProducts = () => {
       loadProducts(); // 🔥 forces image to appear immediately
     } catch (err) {
       console.error("Error creating product", err);
-      alert('Failed to create product');
+      alert(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to create product",
+      );
     } finally {
       setIsSubmitting(false);
     }
