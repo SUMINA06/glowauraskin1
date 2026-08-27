@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import apiClient from "../api/client";
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const orderNumber = searchParams.get("order") || "N/A";
   const amount = searchParams.get("amount") || "0.00";
   const paymentStatus = searchParams.get("status") || "Paid";
@@ -53,7 +54,7 @@ const PaymentSuccess = () => {
           <p className="order-id">Amount Paid: Rs {amount}</p>
           {paymentMethod.toLowerCase() !== "cod" && (
             <div className="payment-proof-upload">
-              <p className="order-id">Upload Payment Proof</p>
+      
               <input
                 type="file"
                 accept="image/*"
