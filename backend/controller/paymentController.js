@@ -449,25 +449,26 @@ exports.verifyEsewa = async (req, res) => {
     // VERIFY SIGNATURE
     // ==================================================
 
-    // eSewa signs the response over the same three fixed fields used to
-    // sign the request (total_amount, transaction_uuid, product_code) —
-    // NOT over the transaction's signed_field_names. Always build the
-    // verification message from those three fields only.
-    //
-    // The total_amount must be EXACTLY the same string we signed when
-    // initializing the payment (initializeEsewa signs Number(order.total)
-    // .toFixed(2)). eSewa echoes total_amount as a JSON number which drops
-    // trailing zeros (e.g. "299.00" -> 299), so using the raw callback value
-    // would produce a different canonical string and fail the check. We
-    // reconstruct the signed string from our own order amount instead.
-    const signedTotalAmount = Number(
-      order.total_amount
-    ).toFixed(2);
+    // eSewa signs the response over the fields listed in the response's
+    // signed_field_names (in that order), using the exact echoed values
+    // (e.g. total_amount="5496.0"). Rebuild the message from
+    // signed_field_names for each of those fields exactly as returned.
+    const signedFields =
+      signed_field_names
+        ? signed_field_names.split(",")
+        : [
+            "total_amount",
+            "transaction_uuid",
+            "product_code",
+          ];
 
     const signatureMessage =
-      `total_amount=${signedTotalAmount},` +
-      `transaction_uuid=${decodedData.transaction_uuid},` +
-      `product_code=${decodedData.product_code}`;
+      signedFields
+        .map(
+          (field) =>
+            `${field}=${decodedData[field]}`
+        )
+        .join(",");
 
     const expectedSignature =
       generateEsewaSignature(
