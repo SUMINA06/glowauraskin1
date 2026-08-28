@@ -14,12 +14,12 @@ const ESEWA_CONFIG = {
     process.env.ESEWA_SECRET_KEY || "8gBm/:&EnhH.1/q",
 
   paymentUrl:
-    process.env.NODE_ENV === "production"
+    process.env.ESEWA_ENV === "production"
       ? "https://epay.esewa.com.np/api/epay/main/v2/form"
       : "https://rc-epay.esewa.com.np/api/epay/main/v2/form",
 
   statusUrl:
-    process.env.NODE_ENV === "production"
+    process.env.ESEWA_ENV === "production"
       ? "https://epay.esewa.com.np/api/epay/transaction/status/"
       : "https://rc.esewa.com.np/api/epay/transaction/status/",
 };
@@ -432,22 +432,14 @@ exports.verifyEsewa = async (req, res) => {
     // VERIFY SIGNATURE
     // ==================================================
 
-    const signedFields =
-      signed_field_names
-        ? signed_field_names.split(",")
-        : [
-            "total_amount",
-            "transaction_uuid",
-            "product_code",
-          ];
-
+    // eSewa signs the response over the same three fixed fields used to
+    // sign the request (total_amount, transaction_uuid, product_code) —
+    // NOT over the transaction's signed_field_names. Always build the
+    // verification message from those three fields only.
     const signatureMessage =
-      signedFields
-        .map(
-          (field) =>
-            `${field}=${decodedData[field]}`
-        )
-        .join(",");
+      `total_amount=${decodedData.total_amount},` +
+      `transaction_uuid=${decodedData.transaction_uuid},` +
+      `product_code=${decodedData.product_code}`;
 
     const expectedSignature =
       generateEsewaSignature(
