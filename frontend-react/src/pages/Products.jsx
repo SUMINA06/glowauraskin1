@@ -12,6 +12,7 @@ const Products = ({
 }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const { addToCart, cart } = useContext(CartContext);
 
   useEffect(() => {
@@ -106,6 +107,10 @@ const Products = ({
       setProducts(productsWithImages);
     } catch (error) {
       console.error("Error loading products:", error);
+      setError(
+        error?.response?.data?.message ||
+          "Unable to load products. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
@@ -150,6 +155,10 @@ const Products = ({
         {loading ? (
           <p style={{ textAlign: "center", padding: "50px" }}>
             Loading products...
+          </p>
+        ) : error ? (
+          <p style={{ textAlign: "center", padding: "50px", color: "red" }}>
+            {error}
           </p>
         ) : products.length === 0 ? (
           <p style={{ textAlign: "center", padding: "50px" }}>

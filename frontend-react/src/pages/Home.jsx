@@ -9,6 +9,7 @@ import "../css/styles.css";
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const { addToCart, cart } = useContext(CartContext);
 
   useEffect(() => {
@@ -40,6 +41,10 @@ const Home = () => {
       setProducts(withImages);
     } catch (err) {
       console.error(err);
+      setError(
+        err?.response?.data?.message ||
+          "Unable to load products. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
@@ -188,6 +193,10 @@ const Home = () => {
 
         {loading ? (
           <p style={{ textAlign: "center" }}>Loading products...</p>
+        ) : error ? (
+          <p style={{ textAlign: "center", color: "red", padding: "20px" }}>
+            {error}
+          </p>
         ) : (
           <div className="category-wrapper">
             <div className="category-list">
