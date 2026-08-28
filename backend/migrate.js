@@ -281,7 +281,7 @@ async function migrateDatabase() {
     if (existingOrderColumns.includes('order_status')) {
       await db.query(`
         ALTER TABLE orders
-        MODIFY COLUMN order_status ENUM('pending', 'confirmed', 'shipped', 'delivered', 'cancelled') NULL DEFAULT 'pending'
+        MODIFY COLUMN order_status ENUM('pending', 'processing', 'paid', 'confirmed', 'shipped', 'delivered', 'cancelled') NULL DEFAULT 'pending'
       `);
       console.log("Updated order_status enum values");
     }
