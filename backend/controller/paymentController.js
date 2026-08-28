@@ -429,6 +429,23 @@ exports.verifyEsewa = async (req, res) => {
     }
 
     // ==================================================
+    // FIND ORDER
+    // ==================================================
+
+    const order =
+      await getOrderByNumber(
+        transaction_uuid
+      );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Order not found.",
+      });
+    }
+
+    // ==================================================
     // VERIFY SIGNATURE
     // ==================================================
 
@@ -436,8 +453,19 @@ exports.verifyEsewa = async (req, res) => {
     // sign the request (total_amount, transaction_uuid, product_code) —
     // NOT over the transaction's signed_field_names. Always build the
     // verification message from those three fields only.
+    //
+    // The total_amount must be EXACTLY the same string we signed when
+    // initializing the payment (initializeEsewa signs Number(order.total)
+    // .toFixed(2)). eSewa echoes total_amount as a JSON number which drops
+    // trailing zeros (e.g. "299.00" -> 299), so using the raw callback value
+    // would produce a different canonical string and fail the check. We
+    // reconstruct the signed string from our own order amount instead.
+    const signedTotalAmount = Number(
+      order.total_amount
+    ).toFixed(2);
+
     const signatureMessage =
-      `total_amount=${decodedData.total_amount},` +
+      `total_amount=${signedTotalAmount},` +
       `transaction_uuid=${decodedData.transaction_uuid},` +
       `product_code=${decodedData.product_code}`;
 
@@ -453,23 +481,6 @@ exports.verifyEsewa = async (req, res) => {
         success: false,
         message:
           "Invalid eSewa payment signature.",
-      });
-    }
-
-    // ==================================================
-    // FIND ORDER
-    // ==================================================
-
-    const order =
-      await getOrderByNumber(
-        transaction_uuid
-      );
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Order not found.",
       });
     }
 
